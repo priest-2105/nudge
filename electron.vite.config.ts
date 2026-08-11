@@ -38,7 +38,9 @@ export default defineConfig({
       rollupOptions: {
         input: {
           settings: resolve(__dirname, 'src/settings-window/index.html'),
-          overlay: resolve(__dirname, 'src/overlay-window/index.html')
+          overlay: resolve(__dirname, 'src/overlay-window/index.html'),
+          alarm: resolve(__dirname, 'src/alarm-window/index.html'),
+          clockWidget: resolve(__dirname, 'src/clock-widget-window/index.html')
         }
       }
     },

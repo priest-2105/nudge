@@ -1,0 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Space+Mono:wght@400;700&display=swap');
+
+:root {
+  --butter: #FFF8E8;
+  --butter-2: #FCEFCF;
+  --ink: #2B1B3D;
+  --ink-70: #2B1B3DB3;
+  --ink-40: #2B1B3D66;
+  --coral: #FF6F59;
+  --coral-dark: #E5543F;
+  --mint: #3DDC97;
+  --mint-dark: #22B47A;
+  --sun: #FFD23F;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+
+  --radius-s: 10px;
+  --radius-m: 16px;
+  --radius-l: 24px;
+  --radius-pill: 999px;
+
+  --shadow-flat: 4px 4px 0 var(--ink);
+  --shadow-flat-sm: 3px 3px 0 var(--ink);
+  --shadow-flat-lg: 6px 6px 0 var(--ink);
+
+  --font-display: 'Bricolage Grotesque', sans-serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}

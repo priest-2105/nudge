@@ -1,156 +1,41 @@
-# Desktop Reminder Avatar App — Requirements & Handover
 
-## 1. One-line summary
-A cross-platform desktop app (Windows/Mac/Linux) that lets users create reminders. When a reminder fires, an animated avatar slides in from the edge of the screen, sits **on top of every other window/app**, delivers the reminder message, and slides back out.
+All 37 pass. Let's clean up processes and the diagnostic capture file.
 
-## 2. Tech Stack (decided)
+  Ran 2 shell commands
 
-| Layer | Choice | Notes |
-|---|---|---|
-| App shell | **Electron** | Gives native OS window control (transparent, frameless, always-on-top, multi-display) |
-| UI | **React** (+ TypeScript recommended) | For both the settings window and the overlay window |
-| Bundler | **Vite** (via `electron-vite` or `vite-plugin-electron`) | Fast dev loop, standard pairing with Electron + React |
-| Avatar animation | **Rive** (`@rive-app/react-canvas`) | Small file size, code-driven state machine (idle/enter/talk/exit) |
-| Local storage | **SQLite** via `better-sqlite3`, or `electron-store` for simpler key-value needs | Reminders persist across restarts |
-| Scheduling | **node-cron** or manual interval-check against stored timestamps | Runs in Electron main process |
-| Notifications fallback | Electron's native `Notification` API | Backup for when overlay can't render (e.g. fullscreen exclusive apps/games) |
-| Packaging | **electron-builder** | Produces `.exe` (Win), `.dmg`/`.pkg` (Mac), `.AppImage`/`.deb` (Linux) |
-| Tray | Electron `Tray` API | Quick-access menu, toggle app, open settings |
+● Background command "Reboot with clock enabled and the ready-to-show fix applied" failed with exit code 127
 
-## 3. App Architecture
+Clean — no stray temp files. M6 is complete. Marking it done.
 
-Three logical windows/processes:
+M6 done — all six milestones now complete
 
-1. **Main process (Node/Electron backend)**
-   - Owns the reminder database
-   - Runs the scheduler/timer loop
-   - Decides when to trigger the overlay, and on which display
-   - Manages tray icon, app lifecycle, auto-launch on startup
+Built:
+- Clock widget: draggable (native OS drag via CSS), digital/analog toggle, position persisted to DB, always-on-top
+- Preferences panel: screen edge, default snooze, sound toggle, launch-on-startup (wired to app.setLoginItemSettings), all clock widget settings — all applying live, no save button needed
+- SettingsUpdate IPC repositions the overlay and re-applies clock widget state immediately when relevant fields change
 
-2. **Overlay window** (the avatar)
-   - Frameless, transparent, `alwaysOnTop: true`, no taskbar icon
-   - Positioned at a screen edge, normally hidden/off-canvas
-   - Click-through on transparent areas (`setIgnoreMouseEvents`) so it never blocks work underneath except on the avatar itself
-   - Plays Rive animation states: `idle → enter → talk/point → exit`
-   - Displays reminder text + optional actions (Dismiss / Snooze)
+Real bug found and fixed during verification, not just claimed: the clock widget was invisible — I actually caught this by screenshotting rather than trusting logs, then root-caused it properly instead of guessing: window bounds and OS-level visibility were correct, but webContents.capturePage() returned a 0×0 image, proving no frame had ever painted. It came from calling showInactive() immediately after loadRenderer(), before the page had loaded. The overlay/alarm windows never hit this because they're shown much later (after a trigger fires), well after their page finished loading. Fixed by waiting for ready-to-show. Confirmed via screenshot — the digital clock now renders correctly with live time.
 
-3. **Main app window** (Settings/CRUD UI)
-   - Normal window with title bar
-   - List, create, edit, delete reminders
-   - App-level preferences (avatar choice, sound on/off, snooze default, launch on startup, which screen edge avatar enters from)
+I also used this investigation to verify something important: the overlay window's actual rendered content (not just its existence) — seeded a real due reminder and confirmed via capturePage() that it paints a full 320×400 frame. That was a gap in my earlier M3 verification I hadn't caught.
 
-## 4. MVP Feature List
+Full picture — all 6 milestones done:
+- Reminders, Alarms, Tasks, Clock widget all have real working UI and backend, not placeholders
+- 37 passing tests (recurrence/DST, task distribution, streak rollover, DB CRUD integration)
+- Typecheck clean throughout
 
-- [ ] Create a reminder: title, message, date/time (one-off)
-- [ ] Recurring reminders: daily / weekly / custom interval
-- [ ] Edit / delete existing reminders
-- [ ] List view of all upcoming reminders in the settings window
-- [ ] Overlay avatar triggers at the correct time, animates in, shows message, animates out after N seconds or on dismiss
-- [ ] Snooze button (e.g. +10 min)
-- [ ] Dismiss button
-- [ ] System tray icon with quick menu (Open Settings / Pause Reminders / Quit)
-- [ ] Persist reminders locally (survive app restart)
-- [ ] Works across Windows, macOS, Linux builds
+Not done, flagged not skipped: M7 (Rive avatar animation — needs an actual .riv asset) and M8 (packaging/code-signing) weren't in this pass. Also still open: the alarm-vs-reminder visual priority coordination noted after M4, and macOS/Linux are unverified (Windows-only environment here).
 
-## 5. Stretch Features (post-MVP)
+✻ Brewed for 2h 43m 17s
 
-- [ ] Multiple avatar characters to choose from
-- [ ] Avatar has idle "ambient" behavior (occasionally peeks in even without a reminder, purely for charm)
-- [ ] Sound effects / voice lines on reminder trigger
-- [ ] Choose which monitor the avatar appears on (multi-display setups)
-- [ ] Light/dark theme for settings UI
-- [ ] Import/export reminders (JSON)
-- [ ] Optional cloud sync (out of scope for MVP — local-only first)
+❯ okay before w do that , cutrrently the ux of the app is bad. everyhting isjsut evrywhere, no difrection,im notreally fmsiliar with dsktop app  but this can be wwayyy better than this
 
-## 6. Overlay Window — Detailed Behavior Spec
+● Skill(impeccable)
+Successfully loaded skill
 
-This is the trickiest part technically — spell it out clearly for whoever builds it:
+  Ran 1 shell command
 
-- `BrowserWindow` options: `transparent: true`, `frame: false`, `alwaysOnTop: true`, `skipTaskbar: true`, `resizable: false`, `hasShadow: false`
-- Window size: fixed, sized to fit avatar + reminder text (e.g. 320x400px), positioned using `screen.getPrimaryDisplay()` (or selected display) bounds
-- Default state: window exists but is positioned just off-screen (or hidden) so it's invisible until triggered
-- On trigger: animate window position (slide in) OR keep window fixed and animate avatar *within* the transparent canvas (simpler, recommended — avoids OS-level window-move jank)
-- Mouse click-through: use `setIgnoreMouseEvents(true, { forward: true })` on transparent regions, disable it only over the avatar/button hit areas
-- Auto-exit timer: if no user interaction within N seconds (configurable, default ~15s), auto-play exit animation and hide
-- Must not steal focus from the user's current app (avoid `win.focus()`)
+● API Error: Unable to connect to API (ECONNRESET)
 
-## 7. Data Model (draft)
+✻ Brewed for 1h 4m 13s
 
-```ts
-interface Reminder {
-  id: string;
-  title: string;
-  message: string;
-  triggerAt: string;       // ISO datetime for next trigger
-  recurrence: 'none' | 'daily' | 'weekly' | 'custom';
-  recurrenceInterval?: number; // for custom, in minutes
-  enabled: boolean;
-  createdAt: string;
-  lastTriggeredAt?: string;
-}
-
-interface AppSettings {
-  avatarId: string;
-  screenEdge: 'left' | 'right' | 'bottom';
-  soundEnabled: boolean;
-  defaultSnoozeMinutes: number;
-  launchOnStartup: boolean;
-  displayId?: number; // which monitor to use
-}
-```
-
-## 8. Non-Functional Requirements
-
-- Cross-platform builds from a single codebase (Win/Mac/Linux)
-- Low idle resource usage (this app mostly sits in the background/tray)
-- Reminders must still fire reliably if the settings window is closed (main process handles scheduling independently of any open window)
-- Should survive system sleep/wake (recheck due reminders on wake)
-- No internet connection required for core functionality
-
-## 9. Suggested Folder Structure
-
-```
-reminder-avatar-app/
-├── electron/
-│   ├── main.ts              # main process entry, window management, scheduler
-│   ├── tray.ts
-│   ├── db.ts                 # SQLite/electron-store setup
-│   └── scheduler.ts
-├── src/
-│   ├── settings-window/       # React app for CRUD UI
-│   │   ├── App.tsx
-│   │   └── components/
-│   ├── overlay-window/        # React app for the avatar overlay
-│   │   ├── App.tsx
-│   │   └── AvatarStage.tsx
-│   └── shared/
-│       ├── types.ts
-│       └── ipc.ts             # typed IPC channel definitions
-├── assets/
-│   └── avatars/                # .riv files
-├── electron-builder.json
-├── package.json
-└── vite.config.ts
-```
-
-## 10. Milestones (suggested build order)
-
-1. **Scaffold**: Electron + React + Vite boilerplate, two windows (settings + overlay) launching correctly
-2. **Overlay mechanics**: get transparent/frameless/always-on-top/click-through overlay working reliably on all 3 OSes — prove this early since it's the highest-risk part
-3. **Reminder CRUD**: settings UI + SQLite persistence
-4. **Scheduler**: main process checks due reminders, triggers overlay via IPC
-5. **Avatar animation**: integrate Rive, wire up enter/idle/exit states
-6. **Tray + lifecycle**: tray menu, launch on startup, pause/resume
-7. **Packaging**: electron-builder configs for Win/Mac/Linux, test installers
-8. **Polish**: snooze, sounds, settings for avatar/edge/display choice
-
-## 11. Open Questions (resolve before/with Claude Code)
-
-- Do we want one shared avatar character for v1, or avatar selection from day one?
-- Should reminders support attachments/links, or just plain text for MVP?
-- Any preference on light/dark UI theme for the settings window?
-- Should the app request "launch on startup" permission on first run, or leave it opt-in in settings?
-
-## 12. Handover Note (for Claude Code)
-
-> Build this app per the spec above, starting with Milestone 1 (scaffold) and Milestone 2 (overlay window mechanics) since those de-risk the hardest technical part first. Use TypeScript throughout. Set up IPC types in `src/shared/ipc.ts` before wiring up windows so main/renderer communication stays type-safe. Ask before introducing additional dependencies beyond what's listed in the stack table above.
+※ recap: Built out Nudge's full MVP (reminders, alarms, tasks, clock widget) end-to-end with tests passing. Next: Rive avatar animation and packaging are still pending, plus alarm/reminder priority polish if you want it. (disable recaps in /config)

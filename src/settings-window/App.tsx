@@ -1,20 +1,26 @@
-function TestOverlayButton(): JSX.Element {
-  function handleClick(): void {
-    window.api.triggerTestOverlay({
-      title: 'Test Reminder',
-      message: 'This is a manually triggered overlay for Milestone 2 testing.'
-    })
-  }
-
-  return <button onClick={handleClick}>Trigger Test Overlay</button>
-}
+import '../shared/styles/tokens.css'
+import './App.css'
+import { RemindersPanel } from './RemindersPanel'
+import { AlarmsPanel } from './AlarmsPanel'
+import { TasksPanel } from './TasksPanel'
+import { PreferencesPanel } from './PreferencesPanel'
 
 export default function App(): JSX.Element {
   return (
-    <div style={{ fontFamily: 'sans-serif', padding: 24 }}>
-      <h1>Nudge</h1>
-      <p>Reminder CRUD lands in Milestone 3. For now, use this to test the overlay mechanics:</p>
-      <TestOverlayButton />
+    <div className="app">
+      <div className="masthead">
+        <span className="logo-dot" />
+        <h1>Nudge</h1>
+      </div>
+      <p className="subhead">Settings — reminders that actually get your attention</p>
+
+      <RemindersPanel />
+      <div className="panel-divider" />
+      <AlarmsPanel />
+      <div className="panel-divider" />
+      <TasksPanel />
+      <div className="panel-divider" />
+      <PreferencesPanel />
     </div>
   )
 }

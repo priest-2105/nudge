@@ -1,38 +1,64 @@
 import { useEffect, useRef, useState } from 'react'
-import type { OverlayTriggerPayload } from '../shared/types'
+import type { TaskTriggerPayload, TriggerPayload } from '../shared/types'
 import { AvatarStage } from './AvatarStage'
 
 const AUTO_EXIT_MS = 15000
 
+type ActiveTrigger =
+  | { kind: 'reminder'; payload: TriggerPayload }
+  | { kind: 'task'; payload: TaskTriggerPayload }
+
 export default function App(): JSX.Element {
   const [visible, setVisible] = useState(false)
-  const [payload, setPayload] = useState<OverlayTriggerPayload | null>(null)
+  const [active, setActive] = useState<ActiveTrigger | null>(null)
   const timerRef = useRef<number | null>(null)
 
   useEffect(() => {
-    const offShow = window.api.onOverlayShow((p) => {
-      setPayload(p)
+    const offReminder = window.api.onTriggerReminder((p) => {
+      setActive({ kind: 'reminder', payload: p })
       setVisible(true)
-      resetAutoExitTimer()
+      resetAutoExitTimer(p.triggerId)
+    })
+    const offTask = window.api.onTriggerTaskOccurrence((p) => {
+      setActive({ kind: 'task', payload: p })
+      setVisible(true)
+      resetAutoExitTimer(p.triggerId)
     })
     const offHide = window.api.onOverlayHide(() => {
       setVisible(false)
     })
     return () => {
-      offShow()
+      offReminder()
+      offTask()
       offHide()
       if (timerRef.current) window.clearTimeout(timerRef.current)
     }
   }, [])
 
-  function resetAutoExitTimer(): void {
+  function resetAutoExitTimer(triggerId: string): void {
     if (timerRef.current) window.clearTimeout(timerRef.current)
-    timerRef.current = window.setTimeout(() => setVisible(false), AUTO_EXIT_MS)
+    timerRef.current = window.setTimeout(() => {
+      setVisible(false)
+      window.api.dismissOverlayTrigger(triggerId)
+    }, AUTO_EXIT_MS)
   }
 
   function handleDismiss(): void {
+    if (!active) return
     setVisible(false)
-    window.api.dismissOverlay()
+    window.api.dismissOverlayTrigger(active.payload.triggerId)
+  }
+
+  function handleSnooze(minutes: number): void {
+    if (!active) return
+    setVisible(false)
+    window.api.snoozeOverlayTrigger(active.payload.triggerId, minutes)
+  }
+
+  function handleDone(): void {
+    if (!active || active.kind !== 'task') return
+    setVisible(false)
+    window.api.completeTaskOccurrence(active.payload.taskId, active.payload.occurrenceId)
   }
 
   function handleMouseEnter(): void {
@@ -47,10 +73,12 @@ export default function App(): JSX.Element {
     <div className="overlay-root">
       <AvatarStage
         visible={visible}
-        payload={payload}
+        active={active}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onDismiss={handleDismiss}
+        onSnooze={handleSnooze}
+        onDone={handleDone}
       />
     </div>
   )

@@ -1,0 +1,77 @@
+html,
+body,
+#root,
+.clock-root {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+}
+
+.clock-drag-handle {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Lets the OS drag the window directly — no custom mouse-event math needed. */
+  -webkit-app-region: drag;
+  cursor: move;
+}
+
+.clock-digital {
+  background: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-flat-lg);
+  padding: var(--space-4) var(--space-5);
+  text-align: center;
+}
+.clock-time {
+  font-family: var(--font-mono);
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--butter);
+  letter-spacing: 0.02em;
+}
+.clock-date {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--butter-2);
+  margin-top: 2px;
+}
+
+.clock-analog {
+  width: 150px;
+  height: 150px;
+}
+.clock-analog circle:first-child {
+  fill: var(--butter);
+  stroke: var(--ink);
+  stroke-width: 3;
+}
+.clock-tick {
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+.clock-hand-hour {
+  stroke: var(--ink);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.clock-hand-minute {
+  stroke: var(--ink);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.clock-hand-second {
+  stroke: var(--coral);
+  stroke-width: 1;
+  stroke-linecap: round;
+}
+.clock-hub {
+  fill: var(--coral);
+}

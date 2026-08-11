@@ -9,3 +9,106 @@ body,
   overflow: hidden;
   pointer-events: none;
 }
+
+/* ---------- Avatar bubble ---------- */
+.avatar-bubble {
+  position: absolute;
+  bottom: 24px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  background: var(--butter);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-l);
+  padding: var(--space-4) var(--space-5);
+  box-shadow: var(--shadow-flat-lg);
+  max-width: 340px;
+  pointer-events: auto;
+  transition: transform 300ms ease-out, opacity 300ms ease-out;
+}
+.avatar-bubble.is-hidden {
+  transform: translateX(380px);
+  opacity: 0;
+}
+
+.avatar-face {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  background: var(--coral);
+  border: 2px solid var(--ink);
+  border-radius: 50% 50% 46% 46%;
+  position: relative;
+}
+.avatar-face::before,
+.avatar-face::after {
+  content: '';
+  position: absolute;
+  top: 20px;
+  width: 7px;
+  height: 7px;
+  background: var(--ink);
+  border-radius: 50%;
+}
+.avatar-face::before {
+  left: 14px;
+}
+.avatar-face::after {
+  right: 14px;
+}
+
+.avatar-bubble .msg-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--coral-dark);
+  margin: 0 0 4px;
+}
+.avatar-bubble .msg-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 17px;
+  margin: 0 0 2px;
+  color: var(--ink);
+}
+.avatar-bubble .msg-body {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink-70);
+  margin: 0 0 var(--space-3);
+}
+.avatar-bubble .msg-actions {
+  display: flex;
+  gap: var(--space-3);
+}
+.avatar-bubble .msg-dismiss,
+.avatar-bubble .msg-snooze {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: transparent;
+  color: var(--ink-70);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.avatar-bubble .msg-dismiss:hover,
+.avatar-bubble .msg-snooze:hover {
+  color: var(--ink);
+}
+.avatar-bubble .msg-done {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: var(--mint);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-pill);
+  padding: 4px 12px;
+  cursor: pointer;
+}

@@ -1,47 +1,70 @@
-import type { OverlayTriggerPayload } from '../shared/types'
+import type { TaskTriggerPayload, TriggerPayload } from '../shared/types'
+
+type ActiveTrigger =
+  | { kind: 'reminder'; payload: TriggerPayload }
+  | { kind: 'task'; payload: TaskTriggerPayload }
 
 interface Props {
   visible: boolean
-  payload: OverlayTriggerPayload | null
+  active: ActiveTrigger | null
   onMouseEnter: () => void
   onMouseLeave: () => void
   onDismiss: () => void
+  onSnooze: (minutes: number) => void
+  onDone: () => void
 }
 
-// Placeholder for Rive (Milestone 5): a plain card that slides in from the
+// Placeholder for Rive (Milestone 7): a plain card that slides in from the
 // screen edge and back out, standing in for the animated avatar.
 export function AvatarStage({
   visible,
-  payload,
+  active,
   onMouseEnter,
   onMouseLeave,
-  onDismiss
+  onDismiss,
+  onSnooze,
+  onDone
 }: Props): JSX.Element {
+  const isTask = active?.kind === 'task'
+  const title = active?.payload.title ?? 'Placeholder Avatar'
+  const message = active?.kind === 'reminder' ? active.payload.message : undefined
+
   return (
     <div
+      className={`avatar-bubble${visible ? '' : ' is-hidden'}`}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
-      style={{
-        position: 'absolute',
-        bottom: 24,
-        right: 16,
-        width: 280,
-        height: 340,
-        borderRadius: 16,
-        background: '#4f46e5',
-        color: 'white',
-        padding: 16,
-        boxSizing: 'border-box',
-        boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
-        pointerEvents: 'auto',
-        transform: visible ? 'translateX(0)' : 'translateX(340px)',
-        opacity: visible ? 1 : 0,
-        transition: 'transform 300ms ease-out, opacity 300ms ease-out'
-      }}
     >
-      <strong>{payload?.title ?? 'Placeholder Avatar'}</strong>
-      <p>{payload?.message}</p>
-      <button onClick={onDismiss}>Dismiss</button>
+      <div className="avatar-face" />
+      <div>
+        <p className="msg-eyebrow">{isTask ? 'Time to' : 'Nudge says'}</p>
+        <p className="msg-title">{title}</p>
+        {message && <p className="msg-body">{message}</p>}
+        <div className="msg-actions">
+          {isTask ? (
+            <>
+              <button className="msg-snooze" onClick={() => onSnooze(10)}>
+                Snooze 10m
+              </button>
+              <button className="msg-dismiss" onClick={onDismiss}>
+                Skip
+              </button>
+              <button className="msg-done" onClick={onDone}>
+                Done
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="msg-snooze" onClick={() => onSnooze(10)}>
+                Snooze 10m
+              </button>
+              <button className="msg-dismiss" onClick={onDismiss}>
+                Dismiss
+              </button>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
