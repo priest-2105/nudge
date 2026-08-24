@@ -50,6 +50,10 @@ export interface Task {
   occurrenceTimes: string[] // resolved list, length === timesPerDay
   timezone: string
   enabled: boolean
+  // Pinned tasks are daily habits: occurrences keep regenerating every day
+  // indefinitely. Unpinned tasks are one-off — once their one day of
+  // occurrences has run, they stop regenerating (but aren't deleted).
+  pinned: boolean
   createdAt: string
 }
 
@@ -72,9 +76,16 @@ export interface TaskStreak {
 
 // ---------- Settings ----------
 
+export type OverlayCorner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+
+// Only 'confetti' exists today — more types (e.g. fireworks, avatar-only)
+// are a fast-follow. Kept as a union so adding one is a one-line change.
+export type CelebrationType = 'confetti'
+
 export interface AppSettings {
   avatarId: string
-  screenEdge: 'left' | 'right' | 'bottom'
+  overlayPosition: OverlayCorner
+  celebrationType: CelebrationType
   soundEnabled: boolean
   defaultSnoozeMinutes: number
   launchOnStartup: boolean
@@ -85,9 +96,22 @@ export interface AppSettings {
     position: { x: number; y: number }
     alwaysOnTop: boolean
   }
+  // A brief blinking-face "heads up" that peeks from the overlay corner
+  // shortly before the real alarm/reminder/task-checkin fires.
+  peekPreview: {
+    leadMinutes: number
+    remindersEnabled: boolean
+    tasksEnabled: boolean
+    alarmsEnabled: boolean
+  }
 }
 
 // ---------- Trigger payloads (main -> renderer) ----------
+
+export interface PeekPreviewPayload {
+  kind: 'reminder' | 'task' | 'alarm'
+  title: string
+}
 
 export interface TriggerPayload {
   triggerId: string

@@ -49,38 +49,30 @@ function pickDisplay(displayId: number | undefined): Display {
 }
 
 function computePosition(
-  edge: AppSettings['screenEdge'],
+  corner: AppSettings['overlayPosition'],
   display: Display
 ): { x: number; y: number } {
   const { bounds } = display
-  switch (edge) {
-    case 'left':
-      return { x: bounds.x + MARGIN_X, y: bounds.y + bounds.height - OVERLAY_HEIGHT - MARGIN_Y }
-    case 'bottom':
-      return {
-        x: bounds.x + Math.round((bounds.width - OVERLAY_WIDTH) / 2),
-        y: bounds.y + bounds.height - OVERLAY_HEIGHT - MARGIN_Y
-      }
-    case 'right':
-    default:
-      return {
-        x: bounds.x + bounds.width - OVERLAY_WIDTH - MARGIN_X,
-        y: bounds.y + bounds.height - OVERLAY_HEIGHT - MARGIN_Y
-      }
-  }
+  const x = corner.endsWith('left')
+    ? bounds.x + MARGIN_X
+    : bounds.x + bounds.width - OVERLAY_WIDTH - MARGIN_X
+  const y = corner.startsWith('top')
+    ? bounds.y + MARGIN_Y
+    : bounds.y + bounds.height - OVERLAY_HEIGHT - MARGIN_Y
+  return { x, y }
 }
 
-/** Re-applies position from current settings — call after screenEdge/displayId changes. */
+/** Re-applies position from current settings — call after overlayPosition/displayId changes. */
 export function repositionOverlayWindow(settings: AppSettings): void {
   if (!overlayWindow) return
   const display = pickDisplay(settings.displayId)
-  const { x, y } = computePosition(settings.screenEdge, display)
+  const { x, y } = computePosition(settings.overlayPosition, display)
   overlayWindow.setBounds({ x, y, width: OVERLAY_WIDTH, height: OVERLAY_HEIGHT })
 }
 
 export function initOverlayWindow(settings: AppSettings): void {
   const display = pickDisplay(settings.displayId)
-  const { x, y } = computePosition(settings.screenEdge, display)
+  const { x, y } = computePosition(settings.overlayPosition, display)
 
   overlayWindow = new BrowserWindow({
     width: OVERLAY_WIDTH,
@@ -175,6 +167,17 @@ export function enqueueReminderTrigger(payload: Omit<TriggerPayload, 'triggerId'
 
 export function enqueueTaskTrigger(payload: Omit<TaskTriggerPayload, 'triggerId'>): void {
   enqueue({ kind: 'task', payload: { ...payload, triggerId: randomUUID() } })
+}
+
+/**
+ * Fires the blinking-face peek preview. Skipped while a real trigger is
+ * showing or queued — the peek is a quiet heads-up, not something that
+ * should interrupt or compete with an active card.
+ */
+export function triggerPeekPreview(kind: 'reminder' | 'task' | 'alarm', title: string): void {
+  if (!overlayWindow || currentItem || queue.length > 0) return
+  overlayWindow.showInactive()
+  overlayWindow.webContents.send(IpcChannels.OverlayPeekPreview, { kind, title })
 }
 
 function enqueue(item: QueueItem): void {

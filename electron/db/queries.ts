@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto'
 import type { Database } from 'sql.js'
+import { DEFAULT_SETTINGS } from '../../src/shared/defaultSettings'
 import type {
   Alarm,
   AppSettings,
@@ -234,6 +235,7 @@ function rowToTask(r: Record<string, unknown>): Task {
     occurrenceTimes: JSON.parse(r.occurrenceTimes as string) as string[],
     timezone: r.timezone as string,
     enabled: Boolean(r.enabled),
+    pinned: Boolean(r.pinned),
     createdAt: r.createdAt as string
   }
 }
@@ -255,8 +257,8 @@ export function createTask(db: Database, input: NewTask): Task {
   const task: Task = { id: randomUUID(), ...input, createdAt: new Date().toISOString() }
   db.run(
     `INSERT INTO tasks
-      (id, title, timesPerDay, scheduleMode, windowStart, windowEnd, occurrenceTimes, timezone, enabled, createdAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (id, title, timesPerDay, scheduleMode, windowStart, windowEnd, occurrenceTimes, timezone, enabled, pinned, createdAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       task.id,
       task.title,
@@ -267,6 +269,7 @@ export function createTask(db: Database, input: NewTask): Task {
       JSON.stringify(task.occurrenceTimes),
       task.timezone,
       task.enabled ? 1 : 0,
+      task.pinned ? 1 : 0,
       task.createdAt
     ]
   )
@@ -281,7 +284,7 @@ export function updateTask(db: Database, id: string, patch: Partial<Task>): Task
   db.run(
     `UPDATE tasks
      SET title = ?, timesPerDay = ?, scheduleMode = ?, windowStart = ?, windowEnd = ?,
-         occurrenceTimes = ?, timezone = ?, enabled = ?
+         occurrenceTimes = ?, timezone = ?, enabled = ?, pinned = ?
      WHERE id = ?`,
     [
       merged.title,
@@ -292,6 +295,7 @@ export function updateTask(db: Database, id: string, patch: Partial<Task>): Task
       JSON.stringify(merged.occurrenceTimes),
       merged.timezone,
       merged.enabled ? 1 : 0,
+      merged.pinned ? 1 : 0,
       id
     ]
   )
@@ -391,7 +395,16 @@ export function getAppSettings(db: Database): AppSettings {
   stmt.step()
   const row = stmt.getAsObject()
   stmt.free()
-  return JSON.parse(row.json as string) as AppSettings
+  const stored = JSON.parse(row.json as string) as Partial<AppSettings> & { screenEdge?: string }
+
+  // Back-compat: pre-rename rows have `screenEdge` (left/right/bottom, always
+  // bottom-anchored) instead of `overlayPosition` (a corner). Map old ->
+  // new so existing local DBs don't crash on a missing field.
+  const overlayPosition =
+    stored.overlayPosition ??
+    (stored.screenEdge === 'left' ? 'bottom-left' : 'bottom-right')
+
+  return { ...DEFAULT_SETTINGS, ...stored, overlayPosition }
 }
 
 export function updateAppSettings(db: Database, patch: Partial<AppSettings>): AppSettings {
@@ -399,7 +412,8 @@ export function updateAppSettings(db: Database, patch: Partial<AppSettings>): Ap
   const merged: AppSettings = {
     ...existing,
     ...patch,
-    clockWidget: { ...existing.clockWidget, ...patch.clockWidget }
+    clockWidget: { ...existing.clockWidget, ...patch.clockWidget },
+    peekPreview: { ...existing.peekPreview, ...patch.peekPreview }
   }
   db.run('UPDATE settings SET json = ? WHERE id = 1', [JSON.stringify(merged)])
   return merged

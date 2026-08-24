@@ -38,7 +38,8 @@ describe('ensureTodayOccurrences', () => {
       windowEnd: '20:00',
       occurrenceTimes: ['09:00', '13:00', '17:00'],
       timezone: 'UTC',
-      enabled: true
+      enabled: true,
+      pinned: true
     })
 
     const now = new Date('2026-08-10T10:00:00Z')
@@ -58,7 +59,8 @@ describe('ensureTodayOccurrences', () => {
       windowEnd: '20:00',
       occurrenceTimes: ['09:00', '17:00'],
       timezone: 'UTC',
-      enabled: true
+      enabled: true,
+      pinned: true
     })
 
     ensureTodayOccurrences(db, task, new Date('2026-08-10T09:00:00Z'))
@@ -84,7 +86,8 @@ describe('ensureTodayOccurrences', () => {
       windowEnd: '20:00',
       occurrenceTimes: ['09:00', '17:00'],
       timezone: 'UTC',
-      enabled: true
+      enabled: true,
+      pinned: true
     })
 
     ensureTodayOccurrences(db, task, new Date('2026-08-10T09:00:00Z'))
@@ -95,5 +98,44 @@ describe('ensureTodayOccurrences', () => {
     ensureTodayOccurrences(db, task, new Date('2026-08-11T09:00:00Z'))
 
     expect(getTaskStreak(db, task.id).currentStreak).toBe(0)
+  })
+
+  it('generates the first day for an unpinned task but does not roll it into a second day', () => {
+    const task = createTask(db, {
+      title: 'One-off errand',
+      timesPerDay: 1,
+      scheduleMode: 'manual',
+      windowStart: '08:00',
+      windowEnd: '20:00',
+      occurrenceTimes: ['09:00'],
+      timezone: 'UTC',
+      enabled: true,
+      pinned: false
+    })
+
+    ensureTodayOccurrences(db, task, new Date('2026-08-10T09:00:00Z'))
+    expect(getOccurrencesForDate(db, task.id, '2026-08-10')).toHaveLength(1)
+
+    // Day boundary crossed — an unpinned task should not regenerate.
+    ensureTodayOccurrences(db, task, new Date('2026-08-11T09:00:00Z'))
+    expect(getOccurrencesForDate(db, task.id, '2026-08-11')).toHaveLength(0)
+  })
+
+  it('keeps rolling a pinned task forward across multiple day boundaries', () => {
+    const task = createTask(db, {
+      title: 'Drink water',
+      timesPerDay: 1,
+      scheduleMode: 'manual',
+      windowStart: '08:00',
+      windowEnd: '20:00',
+      occurrenceTimes: ['09:00'],
+      timezone: 'UTC',
+      enabled: true,
+      pinned: true
+    })
+
+    ensureTodayOccurrences(db, task, new Date('2026-08-10T09:00:00Z'))
+    ensureTodayOccurrences(db, task, new Date('2026-08-11T09:00:00Z'))
+    expect(getOccurrencesForDate(db, task.id, '2026-08-11')).toHaveLength(1)
   })
 })

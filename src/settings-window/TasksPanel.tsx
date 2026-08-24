@@ -3,20 +3,38 @@ import type { NewTask, Task, TaskStreak } from '../shared/types'
 
 const LOCAL_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone
 
+type CountMode = 'count' | 'interval'
+
 interface FormState {
   title: string
   timesPerDay: string
+  countMode: CountMode
+  intervalHours: string
   scheduleMode: Task['scheduleMode']
   windowStart: string
   windowEnd: string
+  pinned: boolean
 }
 
 const EMPTY_FORM: FormState = {
   title: '',
   timesPerDay: '8',
+  countMode: 'count',
+  intervalHours: '2',
   scheduleMode: 'auto',
   windowStart: '08:00',
-  windowEnd: '22:00'
+  windowEnd: '22:00',
+  pinned: true
+}
+
+/** How many times a check-in every `intervalHours` fits inside the window — at least 1. */
+function timesPerDayFromInterval(windowStart: string, windowEnd: string, intervalHours: string): number {
+  const [startH, startM] = windowStart.split(':').map(Number)
+  const [endH, endM] = windowEnd.split(':').map(Number)
+  const windowMinutes = endH * 60 + endM - (startH * 60 + startM)
+  const intervalMinutes = Number(intervalHours) * 60
+  if (windowMinutes <= 0 || intervalMinutes <= 0) return 1
+  return Math.max(1, Math.round(windowMinutes / intervalMinutes))
 }
 
 type Progress = { completed: number; total: number; streak: TaskStreak }
@@ -56,9 +74,12 @@ export function TasksPanel(): JSX.Element {
     setForm({
       title: task.title,
       timesPerDay: String(task.timesPerDay),
+      countMode: 'count',
+      intervalHours: EMPTY_FORM.intervalHours,
       scheduleMode: task.scheduleMode,
       windowStart: task.windowStart,
-      windowEnd: task.windowEnd
+      windowEnd: task.windowEnd,
+      pinned: task.pinned
     })
     setFormOpen(true)
   }
@@ -67,15 +88,21 @@ export function TasksPanel(): JSX.Element {
     e.preventDefault()
     if (!form.title.trim()) return
 
+    const timesPerDay =
+      form.scheduleMode === 'auto' && form.countMode === 'interval'
+        ? timesPerDayFromInterval(form.windowStart, form.windowEnd, form.intervalHours)
+        : Number(form.timesPerDay) || 1
+
     const payload: NewTask = {
       title: form.title.trim(),
-      timesPerDay: Number(form.timesPerDay) || 1,
+      timesPerDay,
       scheduleMode: form.scheduleMode,
       windowStart: form.windowStart,
       windowEnd: form.windowEnd,
       occurrenceTimes: [], // resolved server-side for 'auto'; manual editing of exact times is a fast-follow
       timezone: LOCAL_TIMEZONE,
-      enabled: true
+      enabled: true,
+      pinned: form.pinned
     }
 
     if (editingId) {
@@ -98,10 +125,14 @@ export function TasksPanel(): JSX.Element {
     await refresh()
   }
 
+  async function handleTogglePinned(task: Task): Promise<void> {
+    await window.api.updateTask(task.id, { pinned: !task.pinned })
+    await refresh()
+  }
+
   return (
     <div>
-      <div className="panel-header">
-        <p className="section-label">Tasks</p>
+      <div className="panel-toolbar">
         <button className="btn btn-primary btn-sm" onClick={openCreateForm}>
           + New task
         </button>
@@ -119,6 +150,7 @@ export function TasksPanel(): JSX.Element {
               <div className="peek" />
               <p className="reminder-eyebrow">
                 {task.timesPerDay}x/day · {task.scheduleMode}
+                {task.pinned && <span className="tag" style={{ marginLeft: 8 }}>📌 Pinned</span>}
               </p>
               <h3 className="reminder-title">{task.title}</h3>
               {p && (
@@ -129,6 +161,9 @@ export function TasksPanel(): JSX.Element {
               <div className="reminder-actions">
                 <button className="btn btn-secondary btn-sm" onClick={() => openEditForm(task)}>
                   Edit
+                </button>
+                <button className="btn btn-ghost btn-sm" onClick={() => handleTogglePinned(task)}>
+                  {task.pinned ? 'Unpin' : 'Pin'}
                 </button>
                 <button className="btn btn-ghost btn-sm" onClick={() => handleToggleEnabled(task)}>
                   {task.enabled ? 'Pause' : 'Resume'}
@@ -152,17 +187,6 @@ export function TasksPanel(): JSX.Element {
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               placeholder="Drink water"
-              required
-            />
-          </label>
-
-          <label>
-            Times per day
-            <input
-              type="number"
-              min={1}
-              value={form.timesPerDay}
-              onChange={(e) => setForm({ ...form, timesPerDay: e.target.value })}
               required
             />
           </label>
@@ -196,8 +220,72 @@ export function TasksPanel(): JSX.Element {
                   onChange={(e) => setForm({ ...form, windowEnd: e.target.value })}
                 />
               </label>
+
+              <div className="weekday-picker">
+                <button
+                  type="button"
+                  className={`weekday-toggle${form.countMode === 'count' ? ' is-active' : ''}`}
+                  onClick={() => setForm({ ...form, countMode: 'count' })}
+                >
+                  By count
+                </button>
+                <button
+                  type="button"
+                  className={`weekday-toggle${form.countMode === 'interval' ? ' is-active' : ''}`}
+                  onClick={() => setForm({ ...form, countMode: 'interval' })}
+                >
+                  By interval
+                </button>
+              </div>
+
+              {form.countMode === 'count' ? (
+                <label>
+                  Check-ins per day
+                  <input
+                    type="number"
+                    min={1}
+                    value={form.timesPerDay}
+                    onChange={(e) => setForm({ ...form, timesPerDay: e.target.value })}
+                    required
+                  />
+                </label>
+              ) : (
+                <label>
+                  Check-in every N hours
+                  <input
+                    type="number"
+                    min={0.5}
+                    step={0.5}
+                    value={form.intervalHours}
+                    onChange={(e) => setForm({ ...form, intervalHours: e.target.value })}
+                    required
+                  />
+                </label>
+              )}
             </>
           )}
+
+          {form.scheduleMode === 'manual' && (
+            <label>
+              Check-ins per day
+              <input
+                type="number"
+                min={1}
+                value={form.timesPerDay}
+                onChange={(e) => setForm({ ...form, timesPerDay: e.target.value })}
+                required
+              />
+            </label>
+          )}
+
+          <label className="checkbox-row">
+            <input
+              type="checkbox"
+              checked={form.pinned}
+              onChange={(e) => setForm({ ...form, pinned: e.target.checked })}
+            />
+            Pinned — keep this task every day until unpinned
+          </label>
 
           <div className="reminder-actions">
             <button type="submit" className="btn btn-primary btn-sm">

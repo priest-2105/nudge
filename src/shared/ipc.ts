@@ -6,6 +6,7 @@ import type {
   NewReminder,
   NewTask,
   OverlayTriggerPayload,
+  PeekPreviewPayload,
   Reminder,
   Task,
   TaskStreak,
@@ -61,7 +62,9 @@ export const IpcChannels = {
   // overlay renderer -> main: user dismissed the current trigger
   OverlayDismissTrigger: 'overlay:dismiss-trigger',
   // overlay renderer -> main: user snoozed the current trigger
-  OverlaySnoozeTrigger: 'overlay:snooze-trigger'
+  OverlaySnoozeTrigger: 'overlay:snooze-trigger',
+  // main -> overlay renderer: brief blinking-face heads-up before a real trigger
+  OverlayPeekPreview: 'overlay:peek-preview'
 } as const
 
 export type IpcChannel = (typeof IpcChannels)[keyof typeof IpcChannels]
@@ -86,6 +89,7 @@ export interface NudgeApi {
   snoozeOverlayTrigger: (triggerId: string, minutes: number) => void
   onTriggerReminder: (cb: (payload: TriggerPayload) => void) => () => void
   onOverlayHide: (cb: () => void) => () => void
+  onPeekPreview: (cb: (payload: PeekPreviewPayload) => void) => () => void
 
   // Alarms
   listAlarms: () => Promise<Alarm[]>

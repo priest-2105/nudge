@@ -2,7 +2,8 @@ import type { AppSettings } from './types'
 
 export const DEFAULT_SETTINGS: AppSettings = {
   avatarId: 'default',
-  screenEdge: 'right',
+  overlayPosition: 'bottom-right',
+  celebrationType: 'confetti',
   soundEnabled: true,
   defaultSnoozeMinutes: 10,
   launchOnStartup: false,
@@ -11,5 +12,11 @@ export const DEFAULT_SETTINGS: AppSettings = {
     style: 'digital',
     position: { x: 20, y: 20 },
     alwaysOnTop: true
+  },
+  peekPreview: {
+    leadMinutes: 5,
+    remindersEnabled: true,
+    tasksEnabled: true,
+    alarmsEnabled: true
   }
 }

@@ -1,9 +1,22 @@
 import { powerMonitor } from 'electron'
 import log from 'electron-log'
 import { getDb, persist } from '../db'
-import { applyReminderFired, getDueAlarms, getDueReminders, getOccurrencesForDate, listTasks } from '../db/queries'
+import {
+  applyReminderFired,
+  getAppSettings,
+  getDueAlarms,
+  getDueReminders,
+  getOccurrencesForDate,
+  listTasks
+} from '../db/queries'
 import { enqueueAlarmTrigger, isAlarmActive } from '../windows/alarmWindow'
-import { enqueueReminderTrigger, enqueueTaskTrigger, isTaskOccurrencePending } from '../windows/overlayWindow'
+import {
+  enqueueReminderTrigger,
+  enqueueTaskTrigger,
+  isTaskOccurrencePending,
+  triggerPeekPreview
+} from '../windows/overlayWindow'
+import { checkPeekPreviews } from './peekPreview'
 import { nextReminderTrigger, zonedTimeToUtc } from './recurrence'
 import { ensureTodayOccurrences, localDateString } from './taskRollover'
 
@@ -84,6 +97,11 @@ function runTick(): void {
       })
     }
   }
+
+  checkPeekPreviews(db, getAppSettings(db), now, (kind, title) => {
+    log.info(`[scheduler] peek preview: ${kind} "${title}"`)
+    triggerPeekPreview(kind, title)
+  })
 
   if (dirty) persist()
 }

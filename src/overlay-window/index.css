@@ -9,6 +9,66 @@ body,
   overflow: hidden;
   pointer-events: none;
 }
+.overlay-root {
+  position: relative;
+}
+
+/* ---------- Peek preview ---------- */
+.peek-face {
+  position: absolute;
+  top: 16px;
+  width: 44px;
+  height: 34px;
+  background: var(--coral);
+  border: 2px solid var(--ink);
+  border-radius: 16px 16px 4px 4px;
+  box-shadow: var(--shadow-flat-sm);
+  opacity: 0;
+  transition: transform 450ms cubic-bezier(0.34, 1.4, 0.64, 1), opacity 350ms ease;
+}
+.peek-face.from-right {
+  right: 8px;
+  transform: translateX(60px);
+}
+.peek-face.from-right.is-visible {
+  transform: translateX(0);
+  opacity: 1;
+}
+.peek-face.from-left {
+  left: 8px;
+  transform: translateX(-60px);
+}
+.peek-face.from-left.is-visible {
+  transform: translateX(0);
+  opacity: 1;
+}
+.peek-face::before,
+.peek-face::after {
+  content: '';
+  position: absolute;
+  top: 9px;
+  width: 6px;
+  height: 6px;
+  background: var(--ink);
+  border-radius: 50%;
+  animation: peek-blink 2.4s ease-in-out infinite;
+}
+.peek-face::before {
+  left: 11px;
+}
+.peek-face::after {
+  right: 11px;
+}
+@keyframes peek-blink {
+  0%,
+  88%,
+  100% {
+    transform: scaleY(1);
+  }
+  94% {
+    transform: scaleY(0.15);
+  }
+}
 
 /* ---------- Avatar bubble ---------- */
 .avatar-bubble {
@@ -31,31 +91,60 @@ body,
   transform: translateX(380px);
   opacity: 0;
 }
+.avatar-bubble.is-celebrating {
+  animation: celebrate-pulse 700ms ease-out;
+}
+@keyframes celebrate-pulse {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
 
-.avatar-face {
+/* ---------- Confetti burst ---------- */
+.confetti-burst {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+.confetti-piece {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border: 2px solid var(--ink);
+  border-radius: 2px;
+  opacity: 0;
+  animation: confetti-fly 650ms cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+.confetti-piece.is-round {
+  border-radius: 50%;
+}
+@keyframes confetti-fly {
+  0% {
+    transform: translate(-50%, -50%) translate(0, 0) rotate(0deg) scale(0.6);
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0.9);
+    opacity: 0;
+  }
+}
+
+.avatar-canvas {
   flex-shrink: 0;
   width: 56px;
   height: 56px;
-  background: var(--coral);
-  border: 2px solid var(--ink);
-  border-radius: 50% 50% 46% 46%;
-  position: relative;
-}
-.avatar-face::before,
-.avatar-face::after {
-  content: '';
-  position: absolute;
-  top: 20px;
-  width: 7px;
-  height: 7px;
-  background: var(--ink);
-  border-radius: 50%;
-}
-.avatar-face::before {
-  left: 14px;
-}
-.avatar-face::after {
-  right: 14px;
 }
 
 .avatar-bubble .msg-eyebrow {

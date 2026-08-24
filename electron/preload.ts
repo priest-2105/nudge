@@ -7,6 +7,7 @@ import type {
   NewReminder,
   NewTask,
   OverlayTriggerPayload,
+  PeekPreviewPayload,
   TaskTriggerPayload,
   TriggerPayload
 } from '../src/shared/types'
@@ -44,6 +45,11 @@ const api: NudgeApi = {
     const listener = (): void => cb()
     ipcRenderer.on(IpcChannels.OverlayHide, listener)
     return () => ipcRenderer.removeListener(IpcChannels.OverlayHide, listener)
+  },
+  onPeekPreview: (cb) => {
+    const listener = (_event: Electron.IpcRendererEvent, payload: PeekPreviewPayload): void => cb(payload)
+    ipcRenderer.on(IpcChannels.OverlayPeekPreview, listener)
+    return () => ipcRenderer.removeListener(IpcChannels.OverlayPeekPreview, listener)
   },
 
   listAlarms: () => ipcRenderer.invoke(IpcChannels.AlarmsList),

@@ -35,11 +35,17 @@ export function ensureTodayOccurrences(db: Database, task: Task, now: Date): voi
 
   const yesterday = previousDateString(today)
   const yesterdaysOccurrences = getOccurrencesForDate(db, task.id, yesterday)
-  if (yesterdaysOccurrences.length > 0) {
+  const hasPriorDay = yesterdaysOccurrences.length > 0
+  if (hasPriorDay) {
     const complete = isDayComplete(yesterdaysOccurrences, task.timesPerDay)
     const streak = getTaskStreak(db, task.id)
     saveTaskStreak(db, computeStreakAfterDay(streak, yesterday, complete))
   }
+
+  // Pinned tasks (daily habits) always roll forward. An unpinned task still
+  // gets its first day of occurrences (hasPriorDay is false then), but once
+  // it has at least one day of history it stops regenerating unless pinned.
+  if (hasPriorDay && !task.pinned) return
 
   generateOccurrencesForDate(db, task.id, today, task.occurrenceTimes)
 }

@@ -15,7 +15,7 @@ export function registerSettingsHandlers(): void {
     const settings = updateAppSettings(db, patch)
     persist()
 
-    if (patch.screenEdge || patch.displayId !== undefined) {
+    if (patch.overlayPosition || patch.displayId !== undefined) {
       repositionOverlayWindow(settings)
     }
     if (patch.clockWidget) {

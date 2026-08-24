@@ -110,8 +110,7 @@ export function RemindersPanel(): JSX.Element {
 
   return (
     <div>
-      <div className="panel-header">
-        <p className="section-label">Reminders</p>
+      <div className="panel-toolbar">
         <button className="btn btn-primary btn-sm" onClick={openCreateForm}>
           + New reminder
         </button>

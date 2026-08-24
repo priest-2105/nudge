@@ -89,6 +89,15 @@ const migrations: Migration[] = [
       `)
       db.run('INSERT INTO settings (id, json) VALUES (1, ?)', [JSON.stringify(DEFAULT_SETTINGS)])
     }
+  },
+  {
+    version: 2,
+    up: (db) => {
+      // Existing tasks default to pinned so they keep behaving exactly as
+      // before this migration (daily recurrence) — pinning is opt-out for
+      // pre-existing habits, opt-in only for newly created one-off tasks.
+      db.run('ALTER TABLE tasks ADD COLUMN pinned INTEGER NOT NULL DEFAULT 1')
+    }
   }
 ]
 

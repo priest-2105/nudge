@@ -37,7 +37,7 @@ beforeEach(() => {
 describe('migrations', () => {
   it('seeds a default settings row', () => {
     const settings = getAppSettings(db)
-    expect(settings.screenEdge).toBe('right')
+    expect(settings.overlayPosition).toBe('bottom-right')
     expect(settings.clockWidget.enabled).toBe(false)
   })
 })

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { AppSettings } from '../shared/types'
+import { Toggle } from './Toggle'
 
 export function PreferencesPanel(): JSX.Element {
   const [settings, setSettings] = useState<AppSettings | null>(null)
@@ -24,18 +25,17 @@ export function PreferencesPanel(): JSX.Element {
 
   return (
     <div>
-      <p className="section-label">Preferences</p>
-
       <form className="reminder-form" onSubmit={(e) => e.preventDefault()} style={{ maxWidth: 480 }}>
         <label>
-          Overlay screen edge
+          Overlay corner
           <select
-            value={settings.screenEdge}
-            onChange={(e) => apply({ screenEdge: e.target.value as AppSettings['screenEdge'] })}
+            value={settings.overlayPosition}
+            onChange={(e) => apply({ overlayPosition: e.target.value as AppSettings['overlayPosition'] })}
           >
-            <option value="left">Left</option>
-            <option value="right">Right</option>
-            <option value="bottom">Bottom</option>
+            <option value="top-left">Top left</option>
+            <option value="top-right">Top right</option>
+            <option value="bottom-left">Bottom left</option>
+            <option value="bottom-right">Bottom right</option>
           </select>
         </label>
 
@@ -49,36 +49,37 @@ export function PreferencesPanel(): JSX.Element {
           />
         </label>
 
-        <label className="checkbox-row">
-          <input
-            type="checkbox"
-            checked={settings.soundEnabled}
-            onChange={(e) => apply({ soundEnabled: e.target.checked })}
-          />
-          Sound enabled
+        <label>
+          Celebration type
+          <select
+            value={settings.celebrationType}
+            onChange={(e) => apply({ celebrationType: e.target.value as AppSettings['celebrationType'] })}
+          >
+            <option value="confetti">Confetti (more coming soon)</option>
+          </select>
         </label>
 
-        <label className="checkbox-row">
-          <input
-            type="checkbox"
-            checked={settings.launchOnStartup}
-            onChange={(e) => apply({ launchOnStartup: e.target.checked })}
-          />
-          Launch on startup
-        </label>
+        <Toggle
+          label="Sound enabled"
+          checked={settings.soundEnabled}
+          onChange={(checked) => apply({ soundEnabled: checked })}
+        />
+
+        <Toggle
+          label="Launch on startup"
+          checked={settings.launchOnStartup}
+          onChange={(checked) => apply({ launchOnStartup: checked })}
+        />
 
         <p className="section-label" style={{ marginTop: 'var(--space-4)' }}>
           Clock widget
         </p>
 
-        <label className="checkbox-row">
-          <input
-            type="checkbox"
-            checked={settings.clockWidget.enabled}
-            onChange={(e) => apply({ clockWidget: { ...settings.clockWidget, enabled: e.target.checked } })}
-          />
-          Show clock widget
-        </label>
+        <Toggle
+          label="Show clock widget"
+          checked={settings.clockWidget.enabled}
+          onChange={(checked) => apply({ clockWidget: { ...settings.clockWidget, enabled: checked } })}
+        />
 
         {settings.clockWidget.enabled && (
           <>
@@ -100,18 +101,56 @@ export function PreferencesPanel(): JSX.Element {
               </select>
             </label>
 
-            <label className="checkbox-row">
-              <input
-                type="checkbox"
-                checked={settings.clockWidget.alwaysOnTop}
-                onChange={(e) =>
-                  apply({ clockWidget: { ...settings.clockWidget, alwaysOnTop: e.target.checked } })
-                }
-              />
-              Always on top
-            </label>
+            <Toggle
+              label="Always on top"
+              checked={settings.clockWidget.alwaysOnTop}
+              onChange={(checked) =>
+                apply({ clockWidget: { ...settings.clockWidget, alwaysOnTop: checked } })
+              }
+            />
           </>
         )}
+
+        <p className="section-label" style={{ marginTop: 'var(--space-4)' }}>
+          Peek preview
+        </p>
+        <p className="reminder-body" style={{ marginTop: 0 }}>
+          A small blinking face peeks in from the overlay corner shortly before the real alert.
+        </p>
+
+        <label>
+          Peek lead time (minutes)
+          <input
+            type="number"
+            min={1}
+            value={settings.peekPreview.leadMinutes}
+            onChange={(e) =>
+              apply({ peekPreview: { ...settings.peekPreview, leadMinutes: Number(e.target.value) || 5 } })
+            }
+          />
+        </label>
+
+        <Toggle
+          label="Peek before reminders"
+          checked={settings.peekPreview.remindersEnabled}
+          onChange={(checked) =>
+            apply({ peekPreview: { ...settings.peekPreview, remindersEnabled: checked } })
+          }
+        />
+
+        <Toggle
+          label="Peek before task check-ins"
+          checked={settings.peekPreview.tasksEnabled}
+          onChange={(checked) => apply({ peekPreview: { ...settings.peekPreview, tasksEnabled: checked } })}
+        />
+
+        <Toggle
+          label="Peek before alarms"
+          checked={settings.peekPreview.alarmsEnabled}
+          onChange={(checked) =>
+            apply({ peekPreview: { ...settings.peekPreview, alarmsEnabled: checked } })
+          }
+        />
       </form>
     </div>
   )
