@@ -22,12 +22,15 @@
     },
     "files": [
       "out/**/*",
+      "assets/icons/**/*",
       "package.json"
     ],
     "asarUnpack": [
-      "node_modules/sql.js/dist/*.wasm"
+      "node_modules/sql.js/dist/*.wasm",
+      "assets/icons/**/*"
     ],
     "win": {
+      "icon": "build/icon.png",
       "target": [
         {
           "target": "nsis",

@@ -1,10 +1,10 @@
-import { app, BrowserWindow } from 'electron'
+import { app } from 'electron'
 import log from 'electron-log'
 import { initTray } from './tray'
 import { getDb, initDb } from './db'
 import { getAppSettings } from './db/queries'
 import { initScheduler } from './scheduler/tick'
-import { initSettingsWindow } from './windows/settingsWindow'
+import { allowSettingsWindowToClose, initSettingsWindow, showSettingsWindow } from './windows/settingsWindow'
 import { initOverlayWindow } from './windows/overlayWindow'
 import { initAlarmWindow } from './windows/alarmWindow'
 import { initClockWidgetWindow } from './windows/clockWidgetWindow'
@@ -18,28 +18,45 @@ import { registerSettingsHandlers } from './ipc/settings'
 // Web Audio ringtone until the user clicks something.
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required')
 
-app.whenReady().then(async () => {
-  await initDb()
-  const settings = getAppSettings(getDb())
-
-  initSettingsWindow()
-  initOverlayWindow(settings)
-  initAlarmWindow()
-  initClockWidgetWindow(settings)
-  initTray()
-  initScheduler()
-  registerReminderHandlers()
-  registerAlarmHandlers()
-  registerTaskHandlers()
-  registerSettingsHandlers()
-
-  log.info('[main] app ready — db, scheduler, and windows initialized')
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) initSettingsWindow()
+// Without this, launching Nudge a second time (double-clicking the exe or
+// shortcut again) starts a whole separate process with its own DB connection
+// and its own copy of every window — including a second always-on-top clock
+// widget stacked directly on the first, and a second invisible overlay/alarm
+// window that can end up eating clicks meant for the (first instance's)
+// settings window. Only one instance may ever run.
+const gotSingleInstanceLock = app.requestSingleInstanceLock()
+if (!gotSingleInstanceLock) {
+  app.quit()
+} else {
+  app.on('second-instance', () => {
+    showSettingsWindow()
   })
-})
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit()
-})
+  // Nudge lives in the tray — quitting only happens via the tray's "Quit"
+  // item (or the OS), never by closing the settings window.
+  app.on('before-quit', () => {
+    allowSettingsWindowToClose()
+  })
+
+  app.whenReady().then(async () => {
+    await initDb()
+    const settings = getAppSettings(getDb())
+
+    initSettingsWindow()
+    initOverlayWindow(settings)
+    initAlarmWindow()
+    initClockWidgetWindow(settings)
+    initTray()
+    initScheduler()
+    registerReminderHandlers()
+    registerAlarmHandlers()
+    registerTaskHandlers()
+    registerSettingsHandlers()
+
+    log.info('[main] app ready — db, scheduler, and windows initialized')
+
+    app.on('activate', () => {
+      showSettingsWindow()
+    })
+  })
+}
