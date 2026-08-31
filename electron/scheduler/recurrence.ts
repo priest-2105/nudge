@@ -38,7 +38,7 @@ export function getZonedParts(instant: Date, timeZone: string): ZonedParts {
     year: Number(get('year')),
     month: Number(get('month')),
     day: Number(get('day')),
-    hour: Number(get('hour')) % 24, // Intl can render midnight as "24" with hour12:false
+    hour: Number(get('hour')) % 24, 
     minute: Number(get('minute')),
     second: Number(get('second')),
     weekday: WEEKDAY_INDEX[get('weekday')] ?? 0
